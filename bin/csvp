@@ -1,0 +1,57 @@
+#! /usr/bin/env ruby
+
+require 'thor'
+require 'csv'
+
+class CSVP < Thor
+
+  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  desc "brand", "For products that have a brand, ensure it has a correct brand taxonomy"
+  def brand(csv)
+    stats = Hash.new(0)
+    out_csv = read_table(csv).each do |row|
+      brand = row['brand'].to_s.strip.capitalize
+      (stats[:blank] += 1) && next if brand.empty?
+
+      taxonomies = row['taxonomies'].to_s
+      (stats[:ok] += 1) && next if taxonomies.include?("Brand>#{brand}")
+
+      if taxonomies.match?(/brand>/i)
+        row['taxonomies'] = taxonomies.split('|').map do |heirarchy|
+          heirarchy.match?(/\Abrand>/i) ? "Brand>#{brand}" : heirarchy
+        end.join('|')
+        stats[:corrected] += 1
+      else
+        # brand not included
+        row['taxonomies'] = taxonomies + "|Brand>#{brand}"
+        stats[:added] += 1
+      end
+    end
+
+    write_table(out_csv, options)
+
+    puts "Brands ensured. Products stats:"
+    stats.each { |k, v| puts "#{k}: #{v}" }
+  end
+
+  desc "subset", ""
+  def subset(subset, source, compare_header)
+  end
+
+  private
+
+  def write_table(csv, options = {})
+    options['output_file'].tap do |filename|
+      puts "writing to #{filename}"
+      File.write(filename, csv.to_s)
+    end
+  end
+
+  def read_table(csv, options = {})
+    fail "can't find #{csv}" unless File.exists?(csv)
+    fail "file #{csv} is not a CSV file!" unless File.extname(csv) == '.csv'
+    CSV.new(File.read(csv), headers: true, row_sep: :auto).read
+  end
+end
+
+CSVP.start(ARGV)
