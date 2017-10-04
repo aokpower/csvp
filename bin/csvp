@@ -65,7 +65,7 @@ class CSVP < Thor
   def read_table(csv, options = {})
     fail "can't find #{csv}" unless File.exists?(csv)
     fail "file #{csv} is not a CSV file!" unless File.extname(csv) == '.csv'
-    CSV.new(File.read(csv), headers: true, row_sep: :auto).read
+    CSV.new(File.read(csv), headers: true, row_sep: :auto, skip_lines: /\A[,\s]*\z/).read
   end
 end
 
