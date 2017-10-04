@@ -34,8 +34,23 @@ class CSVP < Thor
     stats.each { |k, v| puts "#{k}: #{v}" }
   end
 
-  desc "subset", ""
-  def subset(subset, source, compare_header)
+  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  desc "intersection", "takes intersection A of B, outputing only rows in B that are in both A and B"
+  long_desc <<-LONGDESC
+  Examples
+  # By default it will compare the rows by the 'sku' header
+  > csvp intersection a.csv b.csv -o c.csv
+
+  # You can change which header is used to compare products, by slug in this example,  like this:
+  > csvp intersection a.csv b.csv slug -o c.csv
+  LONGDESC
+  def intersection(a, b, compare_header='sku')
+    a = read_table(a)
+    b = read_table(b)
+    common = a[compare_header] & b[compare_header]
+
+    c = CSV::Table.new(b.select { |row| common.include?(row[compare_header]) })
+    write_table(c, options)
   end
 
   private
