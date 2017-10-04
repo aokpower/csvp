@@ -1,0 +1,82 @@
+#! /usr/bin/env ruby
+
+require 'thor'
+require 'csv'
+
+class CSVP < Thor
+
+  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  desc "brand", "For products that have a brand, ensure it has a correct brand taxonomy"
+  def brand(csv)
+    stats = Hash.new(0)
+    out_csv = read_table(csv).each do |row|
+      brand = row['brand'].to_s.strip.capitalize
+      (stats[:blank] += 1) && next if brand.empty?
+
+      taxonomies = row['taxonomies'].to_s
+      (stats[:ok] += 1) && next if taxonomies.include?("Brand>#{brand}")
+
+      if taxonomies.match?(/brand>/i)
+        row['taxonomies'] = taxonomies.split('|').map do |heirarchy|
+          heirarchy.match?(/\Abrand>/i) ? "Brand>#{brand}" : heirarchy
+        end.join('|')
+        stats[:corrected] += 1
+      else
+        # brand not included
+        row['taxonomies'] = taxonomies + "|Brand>#{brand}"
+        stats[:added] += 1
+      end
+    end
+
+    write_table(out_csv, options)
+
+    puts "Brands ensured. Products stats:"
+    stats.each { |k, v| puts "#{k}: #{v}" }
+  end
+
+  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  desc "intersect", "takes intersection A of B, outputing only rows in B that are in both A and B"
+  long_desc <<-LONGDESC
+  compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
+  LONGDESC
+  def intersect(a, b, compare_header='sku')
+    a = read_table(a)
+    b = read_table(b)
+    common = a[compare_header] & b[compare_header]
+
+    c = CSV::Table.new(b.select { |row| common.include?(row[compare_header]) })
+    write_table(c, options)
+  end
+
+  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  desc "diff", "takes two spreadsheets, A and B, and leaves only rows A has that B doesn't"
+  long_desc <<-LONGDESC
+  compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
+  LONGDESC
+  def diff(a, b, compare_header='sku')
+    a = read_table(a)
+    b = read_table(b)
+
+    diff = a[compare_header] - b[compare_header]
+    c = CSV::Table.new(a.select { |row| diff.include?(row[compare_header]) })
+    write_table(c, options)
+  end
+
+  private
+
+  def write_table(csv, options = {})
+    # TODO: if file exists prompt to overwrite
+    options['output_file'].tap do |filename|
+      puts "writing to #{filename}"
+      File.write(filename, csv.to_s)
+    end
+  end
+
+  def read_table(csv, options = {})
+    fail "can't find #{csv}" unless File.exists?(csv)
+    fail "file #{csv} is not a CSV file!" unless File.extname(csv) == '.csv'
+    CSV.new(File.read(csv), headers: true, row_sep: :auto, skip_lines: /\A[,\s]*\z/).read
+  end
+end
+
+CSVP.start(ARGV)
