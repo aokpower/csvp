@@ -53,6 +53,17 @@ class CSVP < Thor
     write_table(c, options)
   end
 
+  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  desc "difference", "takes two spreadsheets, A and B, and leaves only rows A has that B doesn't"
+  def difference(a, b, compare_header='sku')
+    a = read_table(a)
+    b = read_table(b)
+
+    diff = a[compare_header] - b[compare_header]
+    c = CSV::Table.new(a.select { |row| diff.include?(row[compare_header]) })
+    write_table(c, options)
+  end
+
   private
 
   def write_table(csv, options = {})
