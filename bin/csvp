@@ -35,16 +35,16 @@ class CSVP < Thor
   end
 
   option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
-  desc "intersection", "takes intersection A of B, outputing only rows in B that are in both A and B"
+  desc "intersect", "takes intersection A of B, outputing only rows in B that are in both A and B"
   long_desc <<-LONGDESC
   Examples
   # By default it will compare the rows by the 'sku' header
-  > csvp intersection a.csv b.csv -o c.csv
+  > csvp intersect a.csv b.csv -o c.csv
 
   # You can change which header is used to compare products, by slug in this example,  like this:
-  > csvp intersection a.csv b.csv slug -o c.csv
+  > csvp intersect a.csv b.csv slug -o c.csv
   LONGDESC
-  def intersection(a, b, compare_header='sku')
+  def intersect(a, b, compare_header='sku')
     a = read_table(a)
     b = read_table(b)
     common = a[compare_header] & b[compare_header]
@@ -54,8 +54,16 @@ class CSVP < Thor
   end
 
   option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
-  desc "difference", "takes two spreadsheets, A and B, and leaves only rows A has that B doesn't"
-  def difference(a, b, compare_header='sku')
+  desc "diff", "takes two spreadsheets, A and B, and leaves only rows A has that B doesn't"
+  long_desc <<-LONGDESC
+  Examples
+  # By default it will compare the rows by the 'sku' header
+  > csvp diff a.csv b.csv -o c.csv
+
+  # You can change which header is used to compare products, by slug in this example,  like this:
+  > csvp diff a.csv b.csv slug -o c.csv
+  LONGDESC
+  def diff(a, b, compare_header='sku')
     a = read_table(a)
     b = read_table(b)
 
