@@ -14,15 +14,17 @@ class CSVP < Thor
       (stats[:blank] += 1) && next if brand.empty?
 
       taxonomies = row['taxonomies'].to_s
+      # Check for correct brand taxon and next. Rules out correct brands
       (stats[:ok] += 1) && next if taxonomies.include?("Brand>#{brand}")
 
-      if taxonomies.match?(/brand>/i)
+      if taxonomies.match?(/brand>/i) # is there already a brand t. heir.?
         row['taxonomies'] = taxonomies.split('|').map do |heirarchy|
+          # Correct brand if its there, rules out bad brand taxon
           heirarchy.match?(/\Abrand>/i) ? "Brand>#{brand}" : heirarchy
         end.join('|')
         stats[:corrected] += 1
       else
-        # brand not included
+        # Only possible state left is missing brand, so add it
         row['taxonomies'] = taxonomies + "|Brand>#{brand}"
         stats[:added] += 1
       end
