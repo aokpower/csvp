@@ -2,9 +2,9 @@
 A csv preprocessing tool. 
 
 ### Install and Setup
-clone the repo:  
+clone the repo and move to it:  
 ```bash
-git clone https://github.com/aokpower/csvp.git
+git clone https://github.com/aokpower/csvp.git; cd csvp
 ```
 
 build and install:  
