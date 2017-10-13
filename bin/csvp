@@ -33,9 +33,7 @@ class CSVP < Thor
     write_table(out_csv, options)
 
     puts 'Brands ensured. Products stats:'
-    # k_padding is the number of characters in the longest key
-    k_padding = stats.keys.map(&:length).reduce { |a, b| a > b ? a : b }
-    stats.each { |k, v| puts "#{k.to_s.rjust(k_padding, ' ')}: #{v}" }
+    put_stats(stats)
   end
 
   option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
@@ -80,6 +78,12 @@ class CSVP < Thor
     raise "can't find #{csv}" unless File.exist?(csv)
     raise "file #{csv} is not a CSV file!" unless File.extname(csv) == '.csv'
     CSV.new(File.read(csv), headers: true, row_sep: :auto, skip_lines: /\A[,\s]*\z/).read
+  end
+
+  def put_stats(stats)
+    # k_padding is the number of characters in the longest key
+    k_padding = stats.keys.map(&:length).reduce { |a, b| a > b ? a : b }
+    stats.each { |k, v| puts "#{k.to_s.rjust(k_padding, ' ')}: #{v}" }
   end
 end
 
