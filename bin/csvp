@@ -83,7 +83,7 @@ class CSVP < Thor
   def put_stats(stats)
     # k_padding is the number of characters in the longest key
     k_padding = stats.keys.map(&:length).reduce { |a, b| a > b ? a : b }
-    stats.each { |k, v| puts "#{k.to_s.rjust(k_padding, ' ')}: #{v}" }
+    stats.each { |k, v| puts "  #{k.to_s.rjust(k_padding, ' ')}: #{v}" }
   end
 end
 
