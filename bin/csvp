@@ -4,8 +4,10 @@ require 'thor'
 require 'csv'
 
 class CSVP < Thor
+  # TODO: Change commands to go to stdout by default, make --output_file optional
 
   option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  # TODO: add stats option
   desc 'brand', 'For products that have a brand, ensure it has a correct brand taxonomy'
   def brand(csv)
     stats = Hash.new(0)
@@ -36,6 +38,8 @@ class CSVP < Thor
     put_stats(stats)
   end
 
+  # TODO make intersect and diff compare headers into options
+
   option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
   desc 'intersect', 'takes intersection A of B, outputing only rows in B that are in both A and B'
   long_desc <<-LONGDESC
@@ -48,6 +52,7 @@ class CSVP < Thor
 
     c = CSV::Table.new(b.select { |row| common.include?(row[compare_header]) })
     write_table(c, options)
+    # TODO add stats
   end
 
   option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
@@ -63,6 +68,11 @@ class CSVP < Thor
     c = CSV::Table.new(a.select { |row| diff.include?(row[compare_header]) })
     write_table(c, options)
   end
+
+  # TODO Diffbot image add
+  # desc "image_add", "
+  # def image_add()
+  # end
 
   private
 
