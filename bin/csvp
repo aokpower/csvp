@@ -4,9 +4,7 @@ require 'thor'
 require 'csv'
 
 class CSVP < Thor
-  # TODO: Change commands to go to stdout by default, make --output_file optional
-
-  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
   # TODO: add stats option
   desc 'brand', 'For products that have a brand, ensure it has a correct brand taxonomy'
   def brand(csv)
@@ -40,7 +38,7 @@ class CSVP < Thor
 
   # TODO make intersect and diff compare headers into options
 
-  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
   desc 'intersect', 'takes intersection A of B, outputing only rows in B that are in both A and B'
   long_desc <<-LONGDESC
   compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
@@ -55,7 +53,7 @@ class CSVP < Thor
     # TODO add stats
   end
 
-  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
   desc 'diff', 'takes two spreadsheets, A and B, and leaves only rows A has that B doesn\'t'
   long_desc <<-LONGDESC
   compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
@@ -78,9 +76,13 @@ class CSVP < Thor
 
   def write_table(csv, options = {})
     # TODO: if file exists prompt to overwrite
-    options['output_file'].tap do |filename|
-      puts "writing to #{filename}"
-      File.write(filename, csv.to_s)
+    if options['output_file']
+      options['output_file'].tap do |filename|
+        puts "writing to #{filename}"
+        File.write(filename, csv.to_s)
+      end
+    else
+      puts csv.to_s
     end
   end
 
