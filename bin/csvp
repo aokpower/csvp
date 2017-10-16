@@ -5,7 +5,7 @@ require 'csv'
 
 class CSVP < Thor
   option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
-  # TODO: add stats option
+  option :stats, default: false, aliases: '-s'
   desc 'brand', 'For products that have a brand, ensure it has a correct brand taxonomy'
   def brand(csv)
     stats = Hash.new(0)
@@ -32,8 +32,10 @@ class CSVP < Thor
 
     write_table(out_csv, options)
 
-    puts 'Brands ensured. Products stats:'
-    put_stats(stats)
+    if options['stats']
+      puts 'Brands ensured. Products stats:'
+      put_stats(stats)
+    end
   end
 
   # TODO make intersect and diff compare headers into options
