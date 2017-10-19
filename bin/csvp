@@ -4,10 +4,8 @@ require 'thor'
 require 'csv'
 
 class CSVP < Thor
-  # TODO: Change commands to go to stdout by default, make --output_file optional
-
-  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
-  # TODO: add stats option
+  option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :stats, default: false, aliases: '-s'
   desc 'brand', 'For products that have a brand, ensure it has a correct brand taxonomy'
   def brand(csv)
     stats = Hash.new(0)
@@ -24,7 +22,7 @@ class CSVP < Thor
           # Correct brand if its there, rules out bad brand taxon
           heirarchy.match?(/\Abrand>/i) ? "Brand>#{brand}" : heirarchy
         end.join('|')
-        stats[:corrected] += 1
+        stats[:changed] += 1
       else
         # Only possible state left is missing brand, so add it
         row['taxonomies'] = taxonomies + "|Brand>#{brand}"
@@ -34,20 +32,22 @@ class CSVP < Thor
 
     write_table(out_csv, options)
 
-    puts 'Brands ensured. Products stats:'
-    put_stats(stats)
+    if options['stats']
+      puts 'Brands ensured. Products stats:'
+      put_stats(stats)
+    end
   end
 
-  # TODO make intersect and diff compare headers into options
-
-  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :compare, default: 'sku', desc: 'header used to compare spreadsheets, sku by default', aliases: '-c'
   desc 'intersect', 'takes intersection A of B, outputing only rows in B that are in both A and B'
   long_desc <<-LONGDESC
   compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
   LONGDESC
-  def intersect(a, b, compare_header = 'sku')
+  def intersect(a, b)
     a = read_table(a)
     b = read_table(b)
+    compare_header = options['compare']
     common = a[compare_header] & b[compare_header]
 
     c = CSV::Table.new(b.select { |row| common.include?(row[compare_header]) })
@@ -55,14 +55,16 @@ class CSVP < Thor
     # TODO add stats
   end
 
-  option :output_file, required: true, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :compare, default: 'sku', desc: 'header used to compare spreadsheets, sku by default', aliases: '-c'
   desc 'diff', 'takes two spreadsheets, A and B, and leaves only rows A has that B doesn\'t'
   long_desc <<-LONGDESC
   compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
   LONGDESC
-  def diff(a, b, compare_header = 'sku')
+  def diff(a, b)
     a = read_table(a)
     b = read_table(b)
+    compare_header = options['compare']
 
     diff = a[compare_header] - b[compare_header]
     c = CSV::Table.new(a.select { |row| diff.include?(row[compare_header]) })
@@ -78,9 +80,13 @@ class CSVP < Thor
 
   def write_table(csv, options = {})
     # TODO: if file exists prompt to overwrite
-    options['output_file'].tap do |filename|
-      puts "writing to #{filename}"
-      File.write(filename, csv.to_s)
+    if options['output_file']
+      options['output_file'].tap do |filename|
+        puts "writing to #{filename}"
+        File.write(filename, csv.to_s)
+      end
+    else
+      puts csv.to_s
     end
   end
 
