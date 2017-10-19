@@ -38,16 +38,16 @@ class CSVP < Thor
     end
   end
 
-  # TODO make intersect and diff compare headers into options
-
   option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :compare, default: 'sku', desc: 'header used to compare spreadsheets, sku by default', aliases: '-c'
   desc 'intersect', 'takes intersection A of B, outputing only rows in B that are in both A and B'
   long_desc <<-LONGDESC
   compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
   LONGDESC
-  def intersect(a, b, compare_header = 'sku')
+  def intersect(a, b)
     a = read_table(a)
     b = read_table(b)
+    compare_header = options['compare']
     common = a[compare_header] & b[compare_header]
 
     c = CSV::Table.new(b.select { |row| common.include?(row[compare_header]) })
@@ -56,13 +56,15 @@ class CSVP < Thor
   end
 
   option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
+  option :compare, default: 'sku', desc: 'header used to compare spreadsheets, sku by default', aliases: '-c'
   desc 'diff', 'takes two spreadsheets, A and B, and leaves only rows A has that B doesn\'t'
   long_desc <<-LONGDESC
   compares by sku header by default, but you can change that by adding another argument after the second spreadsheet
   LONGDESC
-  def diff(a, b, compare_header = 'sku')
+  def diff(a, b)
     a = read_table(a)
     b = read_table(b)
+    compare_header = options['compare']
 
     diff = a[compare_header] - b[compare_header]
     c = CSV::Table.new(a.select { |row| diff.include?(row[compare_header]) })
