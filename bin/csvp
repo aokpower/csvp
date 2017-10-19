@@ -22,7 +22,7 @@ class CSVP < Thor
           # Correct brand if its there, rules out bad brand taxon
           heirarchy.match?(/\Abrand>/i) ? "Brand>#{brand}" : heirarchy
         end.join('|')
-        stats[:corrected] += 1
+        stats[:changed] += 1
       else
         # Only possible state left is missing brand, so add it
         row['taxonomies'] = taxonomies + "|Brand>#{brand}"
