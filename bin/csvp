@@ -2,6 +2,7 @@
 
 require 'thor'
 require 'csv'
+require_relative '../lib/CSVP/Processor.rb'
 
 class CSVP < Thor
   option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
@@ -13,10 +14,10 @@ class CSVP < Thor
   def intersect(a, b)
     a = read_table(a)
     b = read_table(b)
-    compare_header = options['compare']
-    common = a[compare_header] & b[compare_header]
 
-    c = CSV::Table.new(b.select { |row| common.include?(row[compare_header]) })
+    intersected = Processor.intersect(a, b, options['compare'])
+
+    c = CSV::Table.new(intersected)
     write_table(c, options)
     # TODO add stats
   end
@@ -30,10 +31,10 @@ class CSVP < Thor
   def diff(a, b)
     a = read_table(a)
     b = read_table(b)
-    compare_header = options['compare']
 
-    diff = a[compare_header] - b[compare_header]
-    c = CSV::Table.new(a.select { |row| diff.include?(row[compare_header]) })
+    diffed = Processor.diff(a, b, options['compare'])
+
+    c = CSV::Table.new(diffed)
     write_table(c, options)
   end
 
@@ -56,7 +57,7 @@ class CSVP < Thor
     end
   end
 
-  def read_table(csv, options = {})
+  def read_table(csv, options = {}) # takes csv filename and returns CSV::Table
     raise "can't find #{csv}" unless File.exist?(csv)
     raise "file #{csv} is not a CSV file!" unless File.extname(csv) == '.csv'
     CSV.new(File.read(csv), headers: true, row_sep: :auto, skip_lines: /\A[,\s]*\z/).read
