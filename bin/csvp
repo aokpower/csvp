@@ -5,40 +5,6 @@ require 'csv'
 
 class CSVP < Thor
   option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
-  option :stats, default: false, aliases: '-s'
-  desc 'brand', 'For products that have a brand, ensure it has a correct brand taxonomy'
-  def brand(csv)
-    stats = Hash.new(0)
-    out_csv = read_table(csv).each do |row|
-      brand = row['brand'].to_s.strip.capitalize
-      (stats[:blank] += 1) && next if brand.empty?
-
-      taxonomies = row['taxonomies'].to_s
-      # Check for correct brand taxon and next. Rules out correct brands
-      (stats[:ok] += 1) && next if taxonomies.include?("Brand>#{brand}")
-
-      if taxonomies.match?(/brand>/i) # is there already a brand t. heir.?
-        row['taxonomies'] = taxonomies.split('|').map do |heirarchy|
-          # Correct brand if its there, rules out bad brand taxon
-          heirarchy.match?(/\Abrand>/i) ? "Brand>#{brand}" : heirarchy
-        end.join('|')
-        stats[:changed] += 1
-      else
-        # Only possible state left is missing brand, so add it
-        row['taxonomies'] = taxonomies + "|Brand>#{brand}"
-        stats[:added] += 1
-      end
-    end
-
-    write_table(out_csv, options)
-
-    if options['stats']
-      puts 'Brands ensured. Products stats:'
-      put_stats(stats)
-    end
-  end
-
-  option :output_file, desc: 'filename to output the spreadshee too', aliases: '-o'
   option :compare, default: 'sku', desc: 'header used to compare spreadsheets, sku by default', aliases: '-c'
   desc 'intersect', 'takes intersection A of B, outputing only rows in B that are in both A and B'
   long_desc <<-LONGDESC
