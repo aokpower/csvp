@@ -9,4 +9,5 @@ end
 
 group :test, :development do
   gem 'rspec'
+  gem 'factory_bot'
 end
