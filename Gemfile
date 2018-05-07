@@ -6,3 +6,7 @@ gem 'thor'
 group :development do
   gem 'pry'
 end
+
+group :test, :development do
+  gem 'rspec'
+end
